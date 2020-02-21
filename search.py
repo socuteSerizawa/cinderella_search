@@ -2,9 +2,11 @@ from write_csv import CinderellaWriteCsv
 from get_twitter import url, twitter
 import json
 import time
+from KeywordFilter import *
 
 # Enedpointへ渡すパラメーター
-keyword = 'Violet Violence exclude:retweets'
+idol = ['松本紗理奈', 'セクシーデリバリー']
+idol_word = KeywordFilter(idol)
 
 header = ['user_id', 'id', 'created_at', 'text']
 cinderella_csv = CinderellaWriteCsv('./sample.csv', header)
@@ -15,7 +17,7 @@ MAX_TWEETS_ONETIME = 100
 
 params ={
          'count'   : MAX_TWEETS_ONETIME, # 取得するtweet数
-         'q'       : keyword,    # 検索キーワード
+         'q'       : idol_word.keyword,    # 検索キーワード
          'max_id'  : MAX_ID,     # 取得する最大tweetID
          'since_id': SINCE_ID,   # このIDより大きいtweetIDを取得
          }
@@ -30,6 +32,10 @@ while(roop_count < MAX_ROOP):
 
 	if req.status_code == 200:
 		res = json.loads(req.text)
+
+		# 受信結果数により，これ以上取得可能なtweetがあるかどうかを判定
+		if len(res['statuses']) == 0:
+			break
 
 		# 受信結果から，必要なカラムのピックアップ
 		list_for_add_csv =[]
@@ -49,9 +55,6 @@ while(roop_count < MAX_ROOP):
 		params['max_id'] = list_for_add_csv[-1]['id'] - 1
 		# 取得したtweet数の確認
 		print(count_tweets_for_debug)
-		# 受信結果数により，これ以上取得可能なtweetがあるかどうかを判定
-		if(len(list_for_add_csv) < MAX_TWEETS_ONETIME):
-			break
 
 	else:
 		print("Failed: %d" % req.status_code)
